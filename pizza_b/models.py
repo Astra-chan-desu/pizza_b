@@ -5,8 +5,9 @@ from django.db import models
 class Pizza(models.Model):
     name = models.TextField()
     type = models.TextField()
-    cost = models.FloatField()
+    cost = models.DecimalField()
     description = models.TextField()
+    image = models.ImageField()
     # ingredients = for the future, perhaps for searching
 
 
@@ -19,6 +20,7 @@ class User(models.Model):
 class Branch(models.Model):
     number = models.CharField(max_length=50, unique=True)
     address = models.TextField()
+    coordinates = models.CharField(max_length=40, blank=True)
     def __str__(self):
         address_part = self.address[:50] # first 40 simvolov
         return f"{self.number} - {address_part}"
@@ -33,7 +35,7 @@ class Driver(models.Model):
     phone_number = models.CharField(max_length=20, unique=True)
     name = models.CharField(max_length=100)
     status = models.CharField(max_length=20, choices=DRIVER_STATUS, default='offline')
-    current_location = models.CharField(max_length=100, blank=True)
+    coordinates = models.CharField(max_length=40, blank=True)
     branch = models.ForeignKey('Branch', on_delete=models.SET_NULL, null=True)
     is_active = models.BooleanField(default=True)
 
@@ -47,16 +49,15 @@ class Order(models.Model):
         ('delivered', 'Доставлен'),
         ('cancelled', 'Отменен'),
     ]
-    
+    total_cost = models.DecimalField()
     customer_phone = models.CharField(max_length=20)
     delivery_address = models.TextField()
-    delivery_coordinates = models.CharField(max_length=100, blank=True)  # tipa "56.3287,44.0020"
-    total_cost = models.FloatField()
+    delivery_coordinates = models.CharField(max_length=40, blank=True)
     status = models.CharField(max_length=20, choices=ORDER_STATUS, default='pending')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     estimated_delivery_time = models.IntegerField(null=True)  
-    
+    user = models.ForeignKey('User', on_delete=models.SET_NULL, null=True, blank=True)    
     pizzas = models.ManyToManyField(Pizza, through='OrderItem')
     driver = models.ForeignKey('Driver', on_delete=models.SET_NULL, null=True, blank=True)
     branch = models.ForeignKey('Branch', on_delete=models.SET_NULL, null=True)
@@ -64,6 +65,6 @@ class Order(models.Model):
 
 class OrderItem(models.Model):
     order = models.ForeignKey(Order, on_delete=models.CASCADE)
-    pizza = models.ForeignKey(Pizza, on_delete=models.CASCADE)
+    pizza = models.ForeignKey(Pizza, on_delete=models.PROTECT)
     quantity = models.IntegerField(default=1)
-    price = models.FloatField()
+    price = models.DecimalField()

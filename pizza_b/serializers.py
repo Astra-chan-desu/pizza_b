@@ -26,10 +26,10 @@ class DriverSerializer(serializers.ModelSerializer):
         write_only=True,
         required=False
     )
-
+    status_display = serializers.CharField(source='get_status_display', read_only=True)
     class Meta:
         model = Driver
-        fields = ['id', 'name', 'phone_number', 'status', 'branch', 'branch_id']
+        fields = ['id', 'name', 'phone_number', 'status', 'coordinates', 'branch', 'branch_id']
 
 
 
@@ -43,7 +43,11 @@ class OrderItemSerializer(serializers.ModelSerializer):
 class OrderSerializer(serializers.ModelSerializer):
     items = OrderItemSerializer(many=True, source='orderitem_set')
     status_display = serializers.CharField(source='get_status_display', read_only=True)
-    
+    total_cost = serializers.SerializerMethodField()
+
+    driver_name = serializers.CharField(source='driver.name', read_only=True)
+    branch_address = serializers.CharField(source='branch.address', read_only=True)  
+    user_name = serializers.CharField(source='user.name', read_only=True)
     class Meta:
         model = Order
         fields = [
@@ -52,3 +56,5 @@ class OrderSerializer(serializers.ModelSerializer):
             'created_at', 'updated_at', 'driver', 'branch', 'items'
         ]
         read_only_fields = ['id', 'created_at', 'updated_at', 'status_display']
+    def get_total_cost(self, obj):
+        return sum(item.quantity * item.price for item in obj.orderitem_set.all())

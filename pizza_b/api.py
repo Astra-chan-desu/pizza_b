@@ -41,11 +41,13 @@ class OrderViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
     
     def perform_create(self, serializer):
-        if self.delivery_address != None: 
-            found_coordinates = Routing.CoordsFromAddr(self.delivery_address)
-        else:
-            found_coordinates = self.delivery_coordinates
+        delivery_address = self.request.data.get('delivery_address')
+        delivery_coordinates = self.request.data.get('delivery_coordinates', '')
         
+        if delivery_address and not delivery_coordinates:
+            found_coordinates = Routing.Geocode(delivery_address)
+        else:
+            found_coordinates = delivery_coordinates
         items_data = self.request.data.get('items', [])
         estimated_time = 30 
 

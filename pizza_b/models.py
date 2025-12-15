@@ -24,6 +24,10 @@ class Branch(models.Model):
     def __str__(self):
         address_part = self.address[:50] # first 40 simvolov
         return f"{self.number} - {address_part}"
+    def save(self, *args, **kwargs):
+        if self.coordinates:
+            _validate_coordinates(self.coordinates)
+        super().save(*args, **kwargs)
     
 class Driver(models.Model):
     DRIVER_STATUS = [
@@ -38,6 +42,10 @@ class Driver(models.Model):
     coordinates = models.CharField(max_length=40, blank=True)
     branch = models.ForeignKey('Branch', on_delete=models.SET_NULL, null=True)
     is_active = models.BooleanField(default=True)
+    def save(self, *args, **kwargs):
+        if self.coordinates:
+            _validate_coordinates(self.coordinates)
+        super().save(*args, **kwargs)
 
 class Order(models.Model):
     ORDER_STATUS = [
@@ -61,10 +69,37 @@ class Order(models.Model):
     pizzas = models.ManyToManyField(Pizza, through='OrderItem')
     driver = models.ForeignKey('Driver', on_delete=models.SET_NULL, null=True, blank=True)
     branch = models.ForeignKey('Branch', on_delete=models.SET_NULL, null=True)
-
+    def save(self, *args, **kwargs):
+        if self.delivery_coordinates:
+            _validate_coordinates(self.delivery_coordinates)
+        super().save(*args, **kwargs)
+    
+    
 
 class OrderItem(models.Model):
     order = models.ForeignKey(Order, on_delete=models.CASCADE)
     pizza = models.ForeignKey(Pizza, on_delete=models.PROTECT)
     quantity = models.IntegerField(default=1)
     price = models.DecimalField()
+
+@staticmethod
+def _validate_coordinates(coords):
+        """Проверяет формат координат"""
+        try:
+            if not isinstance(coords, str):
+                raise ValueError("Координаты должны быть строкой")
+            
+            parts = coords.split(',')
+            if len(parts) != 2:
+                raise ValueError("Координаты должны быть в формате 'широта,долгота'")
+            
+            lat, lon = float(parts[0]), float(parts[1])
+            
+            if not (-90 <= lat <= 90):
+                raise ValueError("Широта должна быть от -90 до 90")
+            if not (-180 <= lon <= 180):
+                raise ValueError("Долгота должна быть от -180 до 180")
+                
+        except ValueError as e:
+            # Можно залогировать или поднять исключение
+            print(f"Ошибка валидации координат '{coords}': {e}")

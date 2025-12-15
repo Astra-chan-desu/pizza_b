@@ -29,7 +29,7 @@ class DriverSerializer(serializers.ModelSerializer):
     status_display = serializers.CharField(source='get_status_display', read_only=True)
     class Meta:
         model = Driver
-        fields = ['id', 'name', 'phone_number', 'status', 'coordinates', 'branch', 'branch_id']
+        fields = ['id', 'name', 'phone_number', 'status', 'coordinates', 'branch', 'branch_id', 'status_display']
 
 
 
@@ -53,7 +53,7 @@ class OrderSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'customer_phone', 'delivery_address', 'delivery_coordinates',
             'total_cost', 'status', 'status_display', 'estimated_delivery_time',
-            'created_at', 'updated_at', 'driver', 'branch', 'items'
+            'created_at', 'updated_at', 'driver', 'branch', 'items', 'user_name', 'branch_address', 'driver_name',
         ]
         read_only_fields = ['id', 'created_at', 'updated_at', 'status_display']
     def get_total_cost(self, obj):

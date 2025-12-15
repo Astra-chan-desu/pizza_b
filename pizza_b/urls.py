@@ -3,6 +3,9 @@ from django.urls import path,include
 from pizza_b.api import PizzaViewSet, UserViewSet, BranchViewSet, DriverViewSet, OrderViewSet, OrderItemSerializer
 from rest_framework import routers
 
+from django.conf import settings
+from django.conf.urls.static import static
+
 router_pizza = routers.DefaultRouter()
 router_pizza.register('', PizzaViewSet)
 
@@ -25,3 +28,9 @@ urlpatterns = [
     path('drivers/', include(router_drivers.urls)),
     path('orders/', include(router_orders.urls)),
 ]
+
+if settings.DEBUG:
+    urlpatterns += static(
+        settings.MEDIA_URL,
+        document_root=settings.MEDIA_ROOT
+    )
